@@ -81,7 +81,7 @@ export const authOptions: AuthOptions = {
     error: "/login",
   },
   callbacks: {
-    async jwt({ token, user, account }) {
+    async jwt({ token, user, account, trigger, session }) {
       if (user && account) {
         // Only the dedicated admin-credentials flow may grant ADMIN in the
         // session. OAuth sign-ins (Google) are always plain customers, even
@@ -91,6 +91,12 @@ export const authOptions: AuthOptions = {
         const dbUser = await prisma.user.findUnique({ where: { id: token.sub } });
         token.role = dbUser?.role ?? "USER";
       }
+
+      // Triggered by useSession().update({ name }) after a profile edit.
+      if (trigger === "update" && session?.name) {
+        token.name = session.name;
+      }
+
       return token;
     },
     async session({ session, token }) {

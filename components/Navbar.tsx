@@ -2,14 +2,16 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import { useSession, signOut } from "next-auth/react";
-import { ShoppingBag, Search, LogOut } from "lucide-react";
+import { useRouter, usePathname } from "next/navigation";
+import { useSession } from "next-auth/react";
+import { ShoppingBag, Search } from "lucide-react";
 import { getGuestCartCount, onGuestCartChange } from "@/lib/guestCart";
 import { onCartUpdated } from "@/lib/cartEvents";
+import AccountMenu from "@/components/AccountMenu";
 
 export default function Navbar() {
   const router = useRouter();
+  const pathname = usePathname();
   const { data: session, status } = useSession();
   const [query, setQuery] = useState("");
   // Starts at 0 on both server and client — localStorage isn't available
@@ -40,6 +42,10 @@ export default function Navbar() {
     return onCartUpdated(fetchCart);
   }, [status]);
 
+  // Admin pages have their own sidebar/topbar — the storefront search and
+  // cart don't belong there.
+  if (pathname?.startsWith("/admin")) return null;
+
   return (
     <header className="sticky top-0 z-30 bg-white border-b border-gray-100">
       <div className="max-w-6xl mx-auto flex items-center gap-6 px-4 py-4">
@@ -69,17 +75,8 @@ export default function Navbar() {
 
         <div className="flex items-center gap-4 ml-auto">
           {status === "authenticated" ? (
-            <div className="hidden sm:flex items-center gap-3">
-              <span className="w-8 h-8 rounded-full bg-accent/10 text-accent-dark grid place-items-center font-semibold text-xs">
-                {session.user.email?.[0]?.toUpperCase()}
-              </span>
-              <button
-                onClick={() => signOut({ callbackUrl: "/" })}
-                className="flex items-center gap-1.5 text-sm font-medium text-gray-500 hover:text-gray-900"
-              >
-                <LogOut size={15} />
-                Sign out
-              </button>
+            <div className="hidden sm:block">
+              <AccountMenu email={session.user.email ?? ""} />
             </div>
           ) : (
             <Link
