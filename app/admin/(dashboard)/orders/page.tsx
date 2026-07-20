@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
-import { ShoppingCart } from "lucide-react";
+import Link from "next/link";
+import { ShoppingCart, MapPin } from "lucide-react";
 
 export const runtime = "nodejs";
 
@@ -7,6 +8,7 @@ const statusColors: Record<string, string> = {
   PENDING: "bg-yellow-50 text-yellow-700",
   PAID: "bg-green-50 text-green-700",
   FAILED: "bg-red-50 text-red-700",
+  DELIVERED: "bg-blue-50 text-blue-700",
 };
 
 export default async function AdminOrdersPage() {
@@ -22,11 +24,21 @@ export default async function AdminOrdersPage() {
 
       <div className="space-y-3">
         {orders.map((order) => (
-          <div key={order.id} className="bg-white border border-gray-100 rounded-2xl p-5">
+          <Link
+            key={order.id}
+            href={`/admin/orders/${order.id}`}
+            className="block bg-white border border-gray-100 rounded-2xl p-5 hover:shadow-md hover:shadow-gray-200/60 transition-shadow"
+          >
             <div className="flex items-center justify-between">
               <div>
                 <div className="font-semibold text-gray-800">{order.user.email}</div>
                 <div className="text-sm text-gray-400">{order.createdAt.toLocaleString()}</div>
+                {(order.shippingAddress || order.shippingCity) && (
+                  <div className="flex items-center gap-1 text-sm text-gray-500 mt-1">
+                    <MapPin size={13} />
+                    {[order.shippingAddress, order.shippingCity].filter(Boolean).join(", ")}
+                  </div>
+                )}
               </div>
               <div className="text-right">
                 <span
@@ -46,12 +58,8 @@ export default async function AdminOrdersPage() {
                 </li>
               ))}
             </ul>
-            {order.transactionId && (
-              <div className="text-xs text-gray-400 mt-2">
-                Paymob transaction: {order.transactionId}
-              </div>
-            )}
-          </div>
+            <div className="mt-3 text-sm font-medium text-accent-dark">View details →</div>
+          </Link>
         ))}
       </div>
 

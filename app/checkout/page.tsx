@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
-import { Loader2, Lock } from "lucide-react";
+import { Loader2, Lock, LocateFixed } from "lucide-react";
 
 export default function CheckoutPage() {
   const { status } = useSession();
@@ -13,6 +13,46 @@ export default function CheckoutPage() {
   const [city, setCity] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [locating, setLocating] = useState(false);
+  const [locationError, setLocationError] = useState("");
+
+  function useCurrentLocation() {
+    if (!navigator.geolocation) {
+      setLocationError("Geolocation isn't supported on this device.");
+      return;
+    }
+
+    setLocating(true);
+    setLocationError("");
+
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        try {
+          const { latitude, longitude } = position.coords;
+          const res = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`
+          );
+          const data = await res.json();
+          const a = data.address || {};
+
+          const street = [a.house_number, a.road].filter(Boolean).join(" ") || a.neighbourhood || "";
+          const cityName = a.city || a.town || a.village || a.county || "";
+
+          if (street) setAddress(street);
+          if (cityName) setCity(cityName);
+          if (!street && !cityName) setLocationError("Couldn't determine your address from this location.");
+        } catch {
+          setLocationError("Couldn't look up your address. Please enter it manually.");
+        } finally {
+          setLocating(false);
+        }
+      },
+      () => {
+        setLocationError("Location access was denied. Please enter your address manually.");
+        setLocating(false);
+      }
+    );
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -82,13 +122,29 @@ export default function CheckoutPage() {
           />
         </div>
         <div>
-          <label className="block text-sm font-medium mb-1.5 text-gray-700">Address</label>
+          <div className="flex items-center justify-between mb-1.5">
+            <label className="block text-sm font-medium text-gray-700">Address</label>
+            <button
+              type="button"
+              onClick={useCurrentLocation}
+              disabled={locating}
+              className="flex items-center gap-1 text-xs font-medium text-accent-dark hover:underline disabled:opacity-60"
+            >
+              {locating ? (
+                <Loader2 size={12} className="animate-spin" />
+              ) : (
+                <LocateFixed size={12} />
+              )}
+              {locating ? "Locating..." : "Use my current location"}
+            </button>
+          </div>
           <input required value={address} onChange={(e) => setAddress(e.target.value)} className={inputClass} />
         </div>
         <div>
           <label className="block text-sm font-medium mb-1.5 text-gray-700">City</label>
           <input required value={city} onChange={(e) => setCity(e.target.value)} className={inputClass} />
         </div>
+        {locationError && <p className="text-red-600 text-sm">{locationError}</p>}
         {error && <p className="text-red-600 text-sm">{error}</p>}
         <button
           type="submit"
