@@ -10,7 +10,8 @@ export default async function AdminDashboard() {
     prisma.order.count(),
     prisma.order.count({ where: { status: "PENDING" } }),
     prisma.order.aggregate({
-      where: { status: "PAID" },
+      // Delivered orders were paid too — only failed/pending should be excluded.
+      where: { status: { in: ["PAID", "DELIVERED"] } },
       _sum: { total: true },
     }),
   ]);
