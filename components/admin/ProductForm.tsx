@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { Loader2, Upload } from "lucide-react";
+import { toast } from "sonner";
 import { CATEGORIES } from "@/lib/categories";
 
 interface Product {
@@ -29,7 +30,6 @@ function ImageSlot({
   onChange: (value: string) => void;
 }) {
   const [uploading, setUploading] = useState(false);
-  const [error, setError] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
@@ -38,7 +38,6 @@ function ImageSlot({
     if (!file) return;
 
     setUploading(true);
-    setError("");
 
     const formData = new FormData();
     formData.append("file", file);
@@ -48,12 +47,13 @@ function ImageSlot({
 
     if (!res.ok) {
       const data = await res.json().catch(() => ({}));
-      setError(data.error || "Upload failed");
+      toast.error(data.error || "Upload failed");
       return;
     }
 
     const data = await res.json();
     onChange(data.url);
+    toast.success("Image uploaded");
   }
 
   return (
@@ -85,7 +85,6 @@ function ImageSlot({
           {uploading ? <Loader2 size={16} className="animate-spin" /> : <Upload size={16} />}
         </button>
       </div>
-      {error && <p className="text-red-600 text-xs mt-1">{error}</p>}
     </div>
   );
 }
@@ -106,7 +105,6 @@ export default function ProductForm({ product }: { product?: Product }) {
     const initial = product?.images ?? [];
     return [...initial, ...Array(MAX_IMAGES - initial.length).fill("")].slice(0, MAX_IMAGES);
   });
-  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   function updateImage(index: number, value: string) {
@@ -116,7 +114,6 @@ export default function ProductForm({ product }: { product?: Product }) {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
-    setError("");
 
     const payload = {
       name,
@@ -141,10 +138,11 @@ export default function ProductForm({ product }: { product?: Product }) {
 
     if (!res.ok) {
       const data = await res.json().catch(() => ({}));
-      setError(data.error || "Something went wrong");
+      toast.error(data.error || "Something went wrong");
       return;
     }
 
+    toast.success(isEdit ? "Product updated" : "Product created");
     router.push("/admin/products");
     router.refresh();
   }
@@ -230,7 +228,6 @@ export default function ProductForm({ product }: { product?: Product }) {
           ))}
         </div>
       </div>
-      {error && <p className="text-red-600 text-sm">{error}</p>}
       <button
         type="submit"
         disabled={loading}

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
+import { toast } from "sonner";
 
 const STATUSES = ["PENDING", "PAID", "FAILED", "DELIVERED"] as const;
 
@@ -18,14 +19,24 @@ export default function OrderStatusControl({
   const [value, setValue] = useState(status);
 
   async function updateStatus(next: string) {
+    const previous = value;
     setValue(next);
     setLoading(true);
-    await fetch(`/api/admin/orders/${orderId}`, {
+    const res = await fetch(`/api/admin/orders/${orderId}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ status: next }),
     });
     setLoading(false);
+
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      setValue(previous);
+      toast.error(data.error || "Could not update order status.");
+      return;
+    }
+
+    toast.success(`Order marked as ${next}`);
     router.refresh();
   }
 

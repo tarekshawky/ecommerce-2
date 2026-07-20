@@ -5,6 +5,7 @@ import { useSession } from "next-auth/react";
 import type { Session } from "next-auth";
 import Link from "next/link";
 import { Loader2, Lock } from "lucide-react";
+import { toast } from "sonner";
 
 export default function AccountPage() {
   const { data: session, status } = useSession();
@@ -36,14 +37,10 @@ function ProfileForm({ session }: { session: Session }) {
   // mounts once the parent confirms an authenticated session exists.
   const [name, setName] = useState(session.user.name ?? "");
   const [loading, setLoading] = useState(false);
-  const [saved, setSaved] = useState(false);
-  const [error, setError] = useState("");
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
-    setError("");
-    setSaved(false);
 
     const res = await fetch("/api/account", {
       method: "PATCH",
@@ -55,12 +52,12 @@ function ProfileForm({ session }: { session: Session }) {
 
     if (!res.ok) {
       const data = await res.json().catch(() => ({}));
-      setError(data.error || "Could not save changes.");
+      toast.error(data.error || "Could not save changes.");
       return;
     }
 
     await update({ name });
-    setSaved(true);
+    toast.success("Profile updated");
   }
 
   const inputClass =
@@ -82,8 +79,6 @@ function ProfileForm({ session }: { session: Session }) {
             className={`${inputClass} bg-gray-50 text-gray-400`}
           />
         </div>
-        {error && <p className="text-red-600 text-sm">{error}</p>}
-        {saved && <p className="text-green-600 text-sm">Saved.</p>}
         <button
           type="submit"
           disabled={loading}

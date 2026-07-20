@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
+import { toast } from "sonner";
 
 interface User {
   id: string;
@@ -16,13 +17,11 @@ export default function UserForm({ user, isSelf }: { user: User; isSelf: boolean
 
   const [name, setName] = useState(user.name ?? "");
   const [role, setRole] = useState(user.role);
-  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
-    setError("");
 
     const res = await fetch(`/api/admin/users/${user.id}`, {
       method: "PATCH",
@@ -34,10 +33,11 @@ export default function UserForm({ user, isSelf }: { user: User; isSelf: boolean
 
     if (!res.ok) {
       const data = await res.json().catch(() => ({}));
-      setError(data.error || "Something went wrong");
+      toast.error(data.error || "Something went wrong");
       return;
     }
 
+    toast.success("User updated");
     router.push("/admin/users");
     router.refresh();
   }
@@ -73,7 +73,6 @@ export default function UserForm({ user, isSelf }: { user: User; isSelf: boolean
           <p className="text-xs text-gray-400 mt-1">You can&apos;t change your own role.</p>
         )}
       </div>
-      {error && <p className="text-red-600 text-sm">{error}</p>}
       <button
         type="submit"
         disabled={loading}

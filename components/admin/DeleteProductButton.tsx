@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Trash2 } from "lucide-react";
+import { toast } from "sonner";
 
 export default function DeleteProductButton({ id }: { id: string }) {
   const router = useRouter();
@@ -11,7 +12,16 @@ export default function DeleteProductButton({ id }: { id: string }) {
   async function handleDelete() {
     if (!confirm("Delete this product?")) return;
     setLoading(true);
-    await fetch(`/api/admin/products/${id}`, { method: "DELETE" });
+    const res = await fetch(`/api/admin/products/${id}`, { method: "DELETE" });
+    setLoading(false);
+
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      toast.error(data.error || "Could not delete this product.");
+      return;
+    }
+
+    toast.success("Product deleted");
     router.refresh();
   }
 

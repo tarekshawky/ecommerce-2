@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Trash2 } from "lucide-react";
+import { toast } from "sonner";
 
 export default function DeleteUserButton({ id, name }: { id: string; name: string }) {
   const router = useRouter();
@@ -17,10 +18,11 @@ export default function DeleteUserButton({ id, name }: { id: string; name: strin
 
     if (!res.ok) {
       const data = await res.json().catch(() => ({}));
-      alert(data.error || "Could not delete this user.");
+      toast.error(data.error || "Could not delete this user.");
       return;
     }
 
+    toast.success(`${name || "User"} deleted`);
     router.refresh();
   }
 

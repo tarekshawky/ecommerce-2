@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useSession } from "next-auth/react";
 import { Check, Loader2, Plus } from "lucide-react";
+import { toast } from "sonner";
 import { addToGuestCart } from "@/lib/guestCart";
 import { emitCartUpdated } from "@/lib/cartEvents";
 
@@ -20,6 +21,7 @@ export default function AddToCartButton({ productId }: Props) {
     if (status !== "authenticated") {
       addToGuestCart(productId);
       setAdded(true);
+      toast.success("Added to cart");
       return;
     }
 
@@ -32,6 +34,9 @@ export default function AddToCartButton({ productId }: Props) {
     if (res.ok) {
       setAdded(true);
       emitCartUpdated();
+      toast.success("Added to cart");
+    } else {
+      toast.error("Could not add to cart");
     }
     setLoading(false);
   };
