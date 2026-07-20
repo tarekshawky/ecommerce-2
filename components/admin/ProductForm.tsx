@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2 } from "lucide-react";
+import Image from "next/image";
+import { Loader2, Upload } from "lucide-react";
 import { CATEGORIES } from "@/lib/categories";
 
 interface Product {
@@ -10,12 +11,84 @@ interface Product {
   name: string;
   description: string | null;
   price: number;
+  originalPrice: number | null;
   stock: number;
   images: string[];
   category: string | null;
 }
 
 const MAX_IMAGES = 4;
+
+function ImageSlot({
+  index,
+  value,
+  onChange,
+}: {
+  index: number;
+  value: string;
+  onChange: (value: string) => void;
+}) {
+  const [uploading, setUploading] = useState(false);
+  const [error, setError] = useState("");
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+
+    setUploading(true);
+    setError("");
+
+    const formData = new FormData();
+    formData.append("file", file);
+    const res = await fetch("/api/admin/upload", { method: "POST", body: formData });
+
+    setUploading(false);
+
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      setError(data.error || "Upload failed");
+      return;
+    }
+
+    const data = await res.json();
+    onChange(data.url);
+  }
+
+  return (
+    <div>
+      <div className="flex items-center gap-2">
+        <div className="relative w-12 h-12 rounded-lg bg-gray-100 overflow-hidden shrink-0">
+          {value && <Image src={value} alt="" fill sizes="48px" className="object-cover" />}
+        </div>
+        <input
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder={index === 0 ? "Cover image URL" : `Image ${index + 1} URL`}
+          className="flex-1 border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent"
+        />
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/png,image/jpeg,image/webp,image/gif"
+          onChange={handleFile}
+          className="hidden"
+        />
+        <button
+          type="button"
+          onClick={() => fileInputRef.current?.click()}
+          disabled={uploading}
+          title="Upload image"
+          className="shrink-0 w-10 h-10 rounded-xl border border-gray-200 grid place-items-center hover:bg-gray-50 disabled:opacity-50 transition-colors"
+        >
+          {uploading ? <Loader2 size={16} className="animate-spin" /> : <Upload size={16} />}
+        </button>
+      </div>
+      {error && <p className="text-red-600 text-xs mt-1">{error}</p>}
+    </div>
+  );
+}
 
 export default function ProductForm({ product }: { product?: Product }) {
   const router = useRouter();
@@ -24,6 +97,9 @@ export default function ProductForm({ product }: { product?: Product }) {
   const [name, setName] = useState(product?.name ?? "");
   const [description, setDescription] = useState(product?.description ?? "");
   const [price, setPrice] = useState(product ? (product.price / 100).toString() : "");
+  const [originalPrice, setOriginalPrice] = useState(
+    product?.originalPrice ? (product.originalPrice / 100).toString() : ""
+  );
   const [stock, setStock] = useState(product?.stock?.toString() ?? "0");
   const [category, setCategory] = useState(product?.category ?? "");
   const [images, setImages] = useState<string[]>(() => {
@@ -46,6 +122,7 @@ export default function ProductForm({ product }: { product?: Product }) {
       name,
       description,
       price: Math.round(parseFloat(price) * 100),
+      originalPrice: originalPrice ? Math.round(parseFloat(originalPrice) * 100) : null,
       stock: parseInt(stock, 10),
       category: category || null,
       images: images.map((url) => url.trim()).filter(Boolean),
@@ -107,24 +184,34 @@ export default function ProductForm({ product }: { product?: Product }) {
           />
         </div>
         <div>
-          <label className="block text-sm font-medium mb-1.5 text-gray-700">Stock</label>
+          <label className="block text-sm font-medium mb-1.5 text-gray-700">
+            Original price <span className="text-gray-400 font-normal">(optional)</span>
+          </label>
           <input
-            required
             type="number"
+            step="0.01"
             min="0"
-            value={stock}
-            onChange={(e) => setStock(e.target.value)}
+            value={originalPrice}
+            onChange={(e) => setOriginalPrice(e.target.value)}
+            placeholder="Shown crossed out"
             className={inputClass}
           />
         </div>
       </div>
       <div>
-        <label className="block text-sm font-medium mb-1.5 text-gray-700">Category</label>
-        <select
-          value={category}
-          onChange={(e) => setCategory(e.target.value)}
+        <label className="block text-sm font-medium mb-1.5 text-gray-700">Stock</label>
+        <input
+          required
+          type="number"
+          min="0"
+          value={stock}
+          onChange={(e) => setStock(e.target.value)}
           className={inputClass}
-        >
+        />
+      </div>
+      <div>
+        <label className="block text-sm font-medium mb-1.5 text-gray-700">Category</label>
+        <select value={category} onChange={(e) => setCategory(e.target.value)} className={inputClass}>
           <option value="">No category</option>
           {CATEGORIES.map((c) => (
             <option key={c.value} value={c.value}>
@@ -139,13 +226,7 @@ export default function ProductForm({ product }: { product?: Product }) {
         </label>
         <div className="space-y-2">
           {images.map((url, i) => (
-            <input
-              key={i}
-              value={url}
-              onChange={(e) => updateImage(i, e.target.value)}
-              placeholder={i === 0 ? "Cover image URL" : `Image ${i + 1} URL`}
-              className={inputClass}
-            />
+            <ImageSlot key={i} index={i} value={url} onChange={(v) => updateImage(i, v)} />
           ))}
         </div>
       </div>

@@ -15,7 +15,7 @@ export async function POST(req: Request) {
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const body = await req.json();
-  const { name, description, price, stock, images, category } = body;
+  const { name, description, price, originalPrice, stock, images, category } = body;
 
   if (!name || typeof price !== "number") {
     return NextResponse.json({ error: "name and price are required" }, { status: 400 });
@@ -26,6 +26,7 @@ export async function POST(req: Request) {
       name,
       description: description || null,
       price,
+      originalPrice: typeof originalPrice === "number" ? originalPrice : null,
       stock: typeof stock === "number" ? stock : 0,
       images: normalizeImages(images),
       category: normalizeCategory(category),

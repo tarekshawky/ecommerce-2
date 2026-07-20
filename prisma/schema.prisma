@@ -83,6 +83,7 @@ model Product {
   name        String
   description String?
   price       Int
+  originalPrice Int? // pre-discount price, shown crossed out when set and higher than price
   stock       Int         @default(0)
   images      String[]    @default([]) // up to 4 image URLs, first is the cover image
   category    Category?

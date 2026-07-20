@@ -6,12 +6,17 @@ interface Product {
   id: string;
   name: string;
   price: number;
+  originalPrice: number | null;
   images: string[];
   stock: number;
 }
 
 export default function ProductCard({ product }: { product: Product }) {
   const cover = product.images[0];
+  const hasDiscount = !!product.originalPrice && product.originalPrice > product.price;
+  const discountPercent = hasDiscount
+    ? Math.round((1 - product.price / product.originalPrice!) * 100)
+    : 0;
 
   return (
     <div className="group bg-white rounded-2xl border border-gray-100 overflow-hidden hover:shadow-lg hover:shadow-gray-200/60 transition-shadow">
@@ -34,6 +39,11 @@ export default function ProductCard({ product }: { product: Product }) {
             Out of stock
           </span>
         )}
+        {hasDiscount && (
+          <span className="absolute top-2 right-2 bg-accent text-white text-[10px] font-bold px-2 py-1 rounded-full">
+            -{discountPercent}%
+          </span>
+        )}
       </Link>
       <div className="p-3.5">
         <Link href={`/product/${product.id}`}>
@@ -41,9 +51,14 @@ export default function ProductCard({ product }: { product: Product }) {
             {product.name}
           </h3>
         </Link>
-        <p className="mt-1.5 font-bold text-gray-900">
-          EGP {(product.price / 100).toFixed(2)}
-        </p>
+        <div className="mt-1.5 flex items-baseline gap-1.5">
+          <p className="font-bold text-gray-900">EGP {(product.price / 100).toFixed(2)}</p>
+          {hasDiscount && (
+            <p className="text-xs text-gray-400 line-through">
+              EGP {(product.originalPrice! / 100).toFixed(2)}
+            </p>
+          )}
+        </div>
         <div className="mt-3">
           <AddToCartButton productId={product.id} />
         </div>

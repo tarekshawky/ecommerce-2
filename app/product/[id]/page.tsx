@@ -17,6 +17,11 @@ export default async function ProductDetailPage({
 
   if (!product) notFound();
 
+  const hasDiscount = !!product.originalPrice && product.originalPrice > product.price;
+  const discountPercent = hasDiscount
+    ? Math.round((1 - product.price / product.originalPrice!) * 100)
+    : 0;
+
   return (
     <main className="max-w-5xl mx-auto px-4 py-8">
       <Link href="/" className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-900 mb-6">
@@ -29,9 +34,21 @@ export default async function ProductDetailPage({
 
         <div>
           <h1 className="text-2xl font-bold text-gray-900">{product.name}</h1>
-          <p className="mt-2 text-2xl font-bold text-accent-dark">
-            EGP {(product.price / 100).toFixed(2)}
-          </p>
+          <div className="mt-2 flex items-center gap-2.5">
+            <p className="text-2xl font-bold text-accent-dark">
+              EGP {(product.price / 100).toFixed(2)}
+            </p>
+            {hasDiscount && (
+              <>
+                <p className="text-base text-gray-400 line-through">
+                  EGP {(product.originalPrice! / 100).toFixed(2)}
+                </p>
+                <span className="bg-accent/10 text-accent-dark text-xs font-bold px-2 py-1 rounded-full">
+                  -{discountPercent}%
+                </span>
+              </>
+            )}
+          </div>
 
           <p className="mt-2 text-sm">
             {product.stock > 0 ? (
