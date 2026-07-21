@@ -113,8 +113,32 @@ export default function Navbar() {
         </div>
       </div>
 
-      {mobileOpen && (
-        <div className="sm:hidden border-t border-gray-100 px-4 py-4 space-y-4">
+      {/* Backdrop */}
+      <div
+        onClick={() => setMobileOpen(false)}
+        className={`sm:hidden fixed inset-0 bg-black/40 z-40 transition-opacity ${
+          mobileOpen ? "opacity-100" : "opacity-0 pointer-events-none"
+        }`}
+      />
+
+      {/* Slide-in sidebar */}
+      <div
+        className={`sm:hidden fixed inset-y-0 right-0 z-50 w-72 max-w-[85vw] bg-white shadow-xl flex flex-col transition-transform duration-200 ${
+          mobileOpen ? "translate-x-0" : "translate-x-full"
+        }`}
+      >
+        <div className="flex items-center justify-between px-4 py-4 border-b border-gray-100">
+          <span className="font-bold text-lg tracking-tight">Menu</span>
+          <button
+            onClick={() => setMobileOpen(false)}
+            aria-label="Close menu"
+            className="w-8 h-8 rounded-lg grid place-items-center hover:bg-gray-100 text-gray-500"
+          >
+            <X size={18} />
+          </button>
+        </div>
+
+        <div className="p-4 space-y-4 overflow-y-auto">
           <form
             onSubmit={submitSearch}
             className="flex items-center gap-2 bg-gray-100 rounded-full px-4 py-2.5 text-sm"
@@ -136,7 +160,7 @@ export default function Navbar() {
               <Link
                 href="/account/orders"
                 onClick={() => setMobileOpen(false)}
-                className="flex items-center gap-2.5 px-1 py-2 text-sm text-gray-700"
+                className="flex items-center gap-2.5 px-1 py-2.5 text-sm text-gray-700"
               >
                 <Package size={15} className="text-gray-400" />
                 Track order
@@ -144,14 +168,14 @@ export default function Navbar() {
               <Link
                 href="/account"
                 onClick={() => setMobileOpen(false)}
-                className="flex items-center gap-2.5 px-1 py-2 text-sm text-gray-700"
+                className="flex items-center gap-2.5 px-1 py-2.5 text-sm text-gray-700"
               >
                 <User size={15} className="text-gray-400" />
                 Edit profile
               </Link>
               <button
                 onClick={() => signOut({ callbackUrl: "/" })}
-                className="w-full flex items-center gap-2.5 px-1 py-2 text-sm text-red-600"
+                className="w-full flex items-center gap-2.5 px-1 py-2.5 text-sm text-red-600"
               >
                 <LogOut size={15} />
                 Sign out
@@ -167,7 +191,7 @@ export default function Navbar() {
             </Link>
           )}
         </div>
-      )}
+      </div>
     </header>
   );
 }
