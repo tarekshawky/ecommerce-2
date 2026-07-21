@@ -1,4 +1,5 @@
 import Link from "next/link";
+import CheckoutSuccessRedirect from "@/components/CheckoutSuccessRedirect";
 
 export default async function CheckoutSuccessPage({
   searchParams,
@@ -23,6 +24,7 @@ export default async function CheckoutSuccessPage({
       >
         Continue shopping
       </Link>
+      <CheckoutSuccessRedirect />
     </main>
   );
 }
