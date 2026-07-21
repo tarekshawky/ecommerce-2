@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { CreditCard } from "lucide-react";
 
 function VisaBadge() {
   return (
@@ -17,15 +16,6 @@ function MastercardBadge() {
     <span className="relative flex items-center justify-center w-12 h-8 rounded-md bg-gray-50 border border-gray-200">
       <span className="absolute w-4 h-4 rounded-full bg-[#eb001b] -translate-x-[5px]" />
       <span className="absolute w-4 h-4 rounded-full bg-[#f79e1b] opacity-80 translate-x-[5px]" />
-    </span>
-  );
-}
-
-function PaymobBadge() {
-  return (
-    <span className="flex items-center gap-1 w-auto px-2.5 h-8 rounded-md bg-accent/10 text-accent-dark text-xs font-bold">
-      <CreditCard size={13} />
-      Paymob
     </span>
   );
 }
@@ -78,13 +68,21 @@ export default function Footer() {
             <div className="flex items-center gap-2">
               <VisaBadge />
               <MastercardBadge />
-              <PaymobBadge />
             </div>
           </div>
         </div>
 
         <div className="mt-10 pt-6 border-t border-gray-50 text-xs text-gray-400 text-center">
-          © {new Date().getFullYear()} ShopEG. All rights reserved.
+          © {new Date().getFullYear()}{" "}
+          <a
+            href="https://tarekshawky.vercel.app"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hover:text-gray-600"
+          >
+            Tarek Shawky
+          </a>
+          . All rights reserved.
         </div>
       </div>
     </footer>
